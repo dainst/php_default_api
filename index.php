@@ -10,9 +10,15 @@
 * @author Philipp Franck
 *
 * @desc
-* This is a very simple PHP script to create simple remote Servers in PHP
+* This is a very simple PHP script to create simple JSOn Web API for anything in PHP
 *
-*
+* How to use
+* 
+* * make a folder with php-default-api
+* * create your api as obejct wich inherits from server.class.php and put it in this folder
+* * create a settings file in thiw folder.
+* 
+* 
 *
 */
 
@@ -26,7 +32,13 @@ try {
 	
 	// settings
 	$errorReporting = true;
-	include_once("settings.php");
+	$includePath = (!isset($includePath)) ? dirname(dirname($_SERVER['SCRIPT_FILENAME'])) . '/' : $includePath;
+	if (file_exists($includePath . '/' . "settings.php")) {
+		include_once($includePath . '/' . "settings.php");
+	} else {
+		throw new Exception("No settings File!" . $includePath);
+	}
+
 
 	// set up error reporting
 	if ($errorReporting) {
@@ -104,7 +116,7 @@ try {
 	}
 
 	if (!isset($post['task'])) {
-		throw new Exception('No task defined' . print_r($post,1));
+		throw new Exception('No task defined');
 	}
 	
 	$task = $post['task'];
