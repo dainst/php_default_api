@@ -128,7 +128,8 @@ try {
 	require_once("server.class.php");
 	require_once($includePath . "{$serverclass}.class.php");
 
-	$server = new $serverclass($data, $logger, array('debug' => $debugmode));
+	$settings['debug'] = $debugmode;
+	$server = new $serverclass($data, $logger, $settings);
 
 	$server->start();
 	$server->call($task);
@@ -143,7 +144,7 @@ try {
 	if (isset($server)) {
 		$server->finish();
 	}
-	
+
 	$return = array(
 		'success'	=> false,
 		'message'	=> $a->getMessage(),
