@@ -29,6 +29,24 @@
  *
  */
 try {
+
+	// enabling CORS (would be a shameful webservice without)
+	if (isset($_SERVER['HTTP_ORIGIN'])) {
+		header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+		header('Access-Control-Allow-Credentials: true');
+		header('Access-Control-Max-Age: 86400');    // cache for 1 day
+	}
+
+	// Access-Control headers are received during OPTIONS request
+	if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+		if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD'])) {
+			header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+		}
+		if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])) {
+			header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
+		}
+		exit(0);
+	}
 	
 	// settings
 	$errorReporting = true;
@@ -39,7 +57,6 @@ try {
 		throw new Exception("No settings File!" . $includePath);
 	}
 
-
 	// set up error reporting
 	if ($errorReporting) {
 		error_reporting(E_ALL);
@@ -48,7 +65,6 @@ try {
 		ini_set ("display_errors", "0");
 		error_reporting(false);
 	}
-
 
 	// register shutdown function
 	register_shutdown_function(function()  {
@@ -70,30 +86,12 @@ try {
 	require_once('logger.class.php');
 	$logger = new logger($debugmode);
 	
-	
-	// enabling CORS (would be a shameful webservice without)
-	if (isset($_SERVER['HTTP_ORIGIN'])) {
-		header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
-		header('Access-Control-Allow-Credentials: true');
-		header('Access-Control-Max-Age: 86400');    // cache for 1 day
-	}
-
-	// Access-Control headers are received during OPTIONS request
-	if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-		if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD'])) {
-			header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-		}
-		if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])) {
-			header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
-		}
-		exit(0);
-	}
-
 	// low budget security check
 	$ip	= $_SERVER['REMOTE_ADDR'];
 	if (!in_array($ip, $allowedIps) and count($allowedIps)) {
 		throw new Exception("Not allowed, Mr. $ip!");
 	}
+
 
 	// also get angular's post data (there is something shitty going on between angular and php)
 	$_ANGULAR_POST = json_decode(file_get_contents("php://input"));
