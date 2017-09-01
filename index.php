@@ -54,7 +54,7 @@ try {
 	if (file_exists($includePath . '/' . "settings.php")) {
 		include_once($includePath . '/' . "settings.php");
 	} else {
-		throw new Exception("No settings File!" . $includePath);
+		throw new Exception("No settings File! ($includePath)");
 	}
 
 	// set up error reporting
@@ -118,7 +118,7 @@ try {
 	}
 	
 	$task = $post['task'];
-	$data = isset($post['data']) ? $post['data'] : array();
+	$data = isset($post['data']) ? $post['data'] : $post;
 	
 	
 	// go
@@ -146,10 +146,10 @@ try {
 	$return = array(
 		'success'	=> false,
 		'message'	=> $a->getMessage(),
-		'warnings'	=> $logger->warnings
+		'warnings'	=> isset($logger) ? $logger->warnings : 'no logger'
 	);
-	if ($debugmode) {
-		$return['debug'] = $logger->log;
+	if (!isset($debugmode) or $debugmode) {
+		$return['debug'] = isset($logger) ? $logger->log : 'no logger';
 	}	
 	
 	header('Content-Type: application/json');
