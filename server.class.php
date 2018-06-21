@@ -1,6 +1,8 @@
 <?php
 abstract class server {
-	
+
+    public $returnCode = "200";
+
 	public $return = array();
 	
 	public $debug = array();
@@ -23,6 +25,7 @@ abstract class server {
 	abstract function finish(); // not __destruct becuse it should not be called in case of error
 	
 	function errorHandler($fehlercode, $fehlertext, $fehlerdatei, $fehlerzeile) {
+	    $this->returnCode = "500";
 		$this->log->warning("Error $fehlercode in $fehlerdatei row $fehlerzeile: $fehlertext");
 	}
 	

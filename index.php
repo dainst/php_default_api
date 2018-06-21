@@ -92,14 +92,11 @@ try {
 		throw new Exception("Not allowed, Mr. $ip!");
 	}
 
-
 	// also get angular's post data (there is something shitty going on between angular and php)
 	$_ANGULAR_POST = json_decode(file_get_contents("php://input"));
 
 	// combine sets
-	
 	$post = array();
-	
 	foreach ($allowedSets as $set) {
 		if ($set == 'ANGULAR_POST') {
 			$post = array_merge($post, (array) $_ANGULAR_POST);
@@ -113,13 +110,15 @@ try {
 		
 	}
 
+	// task
 	if (!isset($post['task'])) {
 		throw new Exception('No task defined');
 	}
-	
 	$task = $post['task'];
 	$data = isset($post['data']) ? $post['data'] : $post;
-	
+
+	// plain output ?
+    $plainOutput = !isset($plainOutput) ? false: $plainOutput;
 	
 	// go
 	$logger->log('get server ' . $serverclass);
@@ -135,8 +134,6 @@ try {
 
 	$return = $server->return;
 
-
-
 } catch (Exception $a) {
 	ob_clean();
 	if (isset($server)) {
@@ -150,28 +147,25 @@ try {
 	);
 	if (!isset($debugmode) or $debugmode) {
 		$return['debug'] = isset($logger) ? $logger->log : 'no logger';
-	}	
-	
+	}
+
+	$returnCode = isset($server) && (substr($server->returnCode,0,1) != "2") ? $server->returnCode : 500;
+    http_response_code($returnCode);
 	header('Content-Type: application/json');
 	echo json_encode($return);
 	die();
 }
 
 
-
 // return  success
 $logger->log('OK');
-
-
-// return  success
 $return['task'] = $task;
 $return['success'] = true;
 $return['warnings'] = $logger->warnings;
 if ($debugmode) {
 	$return['debug'] = $logger->log;
 }
-
-
+http_response_code($server->returnCode);
 header('Content-Type: application/json');
-echo json_encode($return);
+echo json_encode($plainOutput ? $server->return : $return);
 ?>
