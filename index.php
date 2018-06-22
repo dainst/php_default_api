@@ -1,26 +1,25 @@
 <?php
 /**
  *
-* OJS Importer - Remote Server
-*
-* @version 2
-*
-* @year 2016
-*
-* @author Philipp Franck
-*
-* @desc
-* This is a very simple PHP script to create simple JSOn Web API for anything in PHP
-*
-* How to use
-* 
-* * make a folder with php-default-api
-* * create your api as obejct wich inherits from server.class.php and put it in this folder
-* * create a settings file in thiw folder.
-* 
-* 
-*
-*/
+ *
+ * @version 2.1
+ *
+ * @year 2016 - 2018
+ *
+ * @author Philipp Franck
+ *
+ * @desc
+ * This is a very simple PHP script to create simple JSOn Web API for anything in PHP
+ *
+ * How to use
+ *
+ * * make a folder with php-default-api
+ * * create your api as obejct wich inherits from server.class.php and put it in this folder
+ * * create a settings file in thiw folder.
+ *
+ *
+ *
+ */
 
 
 
@@ -56,6 +55,7 @@ try {
 	} else {
 		throw new Exception("No settings File! ($includePath)");
 	}
+    $plainOutput = !isset($plainOutput) ? false: $plainOutput;
 
 	// set up error reporting
 	if ($errorReporting) {
@@ -92,8 +92,13 @@ try {
 		throw new Exception("Not allowed, Mr. $ip!");
 	}
 
-	// also get angular's post data (there is something shitty going on between angular and php)
-	$_ANGULAR_POST = json_decode(file_get_contents("php://input"));
+	// post body
+    $_ANGULAR_POST = array();
+	if (!isset($_SERVER["CONTENT_TYPE"]) or ($_SERVER["CONTENT_TYPE"] == "application/json")) {
+        $_ANGULAR_POST = json_decode(file_get_contents("php://input"));
+    } else {
+        $_POST_BODY = file_get_contents("php://input");
+    }
 
 	// combine sets
 	$post = array();
@@ -116,10 +121,8 @@ try {
 	}
 	$task = $post['task'];
 	$data = isset($post['data']) ? $post['data'] : $post;
+    $data = isset($_POST_BODY) ? $_POST_BODY : $data;
 
-	// plain output ?
-    $plainOutput = !isset($plainOutput) ? false: $plainOutput;
-	
 	// go
 	$logger->log('get server ' . $serverclass);
 	require_once("server.class.php");
