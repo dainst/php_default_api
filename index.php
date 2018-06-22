@@ -9,22 +9,7 @@
  * @author Philipp Franck
  *
  * @desc
- * This is a very simple PHP script to create simple JSOn Web API for anything in PHP
- *
- * How to use
- *
- * * make a folder with php-default-api
- * * create your api as obejct wich inherits from server.class.php and put it in this folder
- * * create a settings file in thiw folder.
- *
- *
- *
- */
-
-
-
-/**
- * go
+ * This is a very simple PHP script to create simple JSON Web API for anything in PHP
  *
  */
 try {
@@ -92,6 +77,23 @@ try {
 		throw new Exception("Not allowed, Mr. $ip!");
 	}
 
+	// url parameters
+    $thisPath = explode("/", dirname($_SERVER["PHP_SELF"]));
+    $fullRequestPath = explode("/", $_SERVER["REQUEST_URI"]);
+    $_URL_PARAMS = array_slice($fullRequestPath, array_search(end($thisPath), $fullRequestPath) + 1);
+    $_URL_PARAMS = array_filter($_URL_PARAMS, function($elem) {
+        if ($elem === "") {
+            return false;
+        }
+        if (substr($elem, 0, 9) == "index.php") {
+            return false;
+        }
+        if (substr($elem, 0, 1) === "?") {
+            return false;
+        }
+        return true;
+    });
+
 	// post body
     $_ANGULAR_POST = array();
 	if (!isset($_SERVER["CONTENT_TYPE"]) or ($_SERVER["CONTENT_TYPE"] == "application/json")) {
@@ -100,28 +102,30 @@ try {
         $_POST_BODY = file_get_contents("php://input");
     }
 
-	// combine sets
-	$post = array();
+	// combine sets of data
+	$data = array();
 	foreach ($allowedSets as $set) {
 		if ($set == 'ANGULAR_POST') {
-			$post = array_merge($post, (array) $_ANGULAR_POST);
+            $data = array_merge($data, (array) $_ANGULAR_POST);
 		}
 		if ($set == 'POST') {
-			$post = array_merge($post, (array) $_POST);
+            $data = array_merge($data, (array) $_POST);
+            $data["%"] = $_POST_BODY;
 		}
 		if ($set == 'GET') {
-			$post = array_merge($post, (array) $_GET);
+            $data = array_merge($data, (array) $_GET);
 		}
-		
+		if ($set == 'URL') {
+            if (count($_URL_PARAMS)) {
+                $data['task'] = array_shift($_URL_PARAMS);
+            }
+            $data["/"] = $_URL_PARAMS;
+        }
 	}
 
-	// task
-	if (!isset($post['task'])) {
-		throw new Exception('No task defined');
-	}
-	$task = $post['task'];
-	$data = isset($post['data']) ? $post['data'] : $post;
-    $data = isset($_POST_BODY) ? $_POST_BODY : $data;
+	// some refinements of data-array
+	$task = isset($data['task']) ? $data['task'] : false;
+	$data = isset($data['data']) ? $data['data'] : $data;
 
 	// go
 	$logger->log('get server ' . $serverclass);
@@ -152,7 +156,7 @@ try {
 		$return['debug'] = isset($logger) ? $logger->log : 'no logger';
 	}
 
-	$returnCode = isset($server) && (substr($server->returnCode,0,1) != "2") ? $server->returnCode : 500;
+	$returnCode = !isset($returnCode) && isset($server) && (substr($server->returnCode,0,1) != "2") ? $server->returnCode : 500;
     http_response_code($returnCode);
 	header('Content-Type: application/json');
 	echo json_encode($return);

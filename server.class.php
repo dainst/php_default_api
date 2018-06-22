@@ -17,8 +17,6 @@ abstract class server {
 		$this->data = $data;
 		$this->debug = isset($this->settings['debug']) and $this->settings['debug'];
 	}
-	
-
 
 	abstract function start();
 	
@@ -31,9 +29,14 @@ abstract class server {
 	
 	function call($task) {
 		// security settings here
+
+        if ($task === false) {
+            throw new Exception("No task defined!");
+        }
 		
 		if (!method_exists($this, $task)) {
-			throw new Exception("Error: Task does not exist: " .  $task);
+            $this->returnCode = 404;
+			throw new Exception("Task does not exist: " .  $task);
 		}
 		
 		$this->$task();
