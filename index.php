@@ -96,6 +96,7 @@ try {
 
 	// post body
     $_ANGULAR_POST = array();
+    $_POST_BODY = "";
 	if (!isset($_SERVER["CONTENT_TYPE"]) or ($_SERVER["CONTENT_TYPE"] == "application/json")) {
         $_ANGULAR_POST = json_decode(file_get_contents("php://input"));
     } else {
