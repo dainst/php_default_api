@@ -143,7 +143,9 @@ try {
 	$return = $server->return;
 
 } catch (Exception $a) {
-	ob_clean();
+    if (count(ob_list_handlers())) {
+        ob_clean();
+    }
 	if (isset($server)) {
 		$server->finish();
 	}
